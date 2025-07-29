@@ -33,7 +33,7 @@
         dest: "~/complytime/"
         mode: "0640"
 
-    #### These 3 tasks can be removed as soon complyctl v0.0.9 is available
+    #### These 5 tasks can be removed as soon complyctl v0.0.9 is available
     - name: "Download OSCAL Catalog"
       ansible.builtin.get_url:
         url: "{{ fedora_catalog }}"
