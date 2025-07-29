@@ -1,0 +1,91 @@
+---
+- name: Scan VM with complyctl
+  hosts: all
+  become: true
+  vars:
+    complytime_workspace: "/usr/share/complytime"
+    fedora_catalog: "https://raw.githubusercontent.com/ComplianceAsCode/oscal-content/refs/heads/main/catalogs/cusp_fedora/catalog.json"
+    fedora_profile: "https://raw.githubusercontent.com/ComplianceAsCode/oscal-content/refs/heads/main/profiles/fedora-cusp_fedora-default/profile.json"
+    fedora_component_definition: "https://raw.githubusercontent.com/ComplianceAsCode/oscal-content/refs/heads/main/component-definitions/fedora/fedora-cusp_fedora-default/component-definition.json"
+    catalog_file: "cusp-catalog.json"
+    profile_file: "cusp-profile.json"
+    component_definition_file: "cusp-component-definition.json"
+  tasks:
+    - name: "Ensure the compliance packages are installed"
+      ansible.builtin.dnf:
+        name:
+          - complyctl
+          - complyctl-openscap-plugin
+          - kernel # Due to an applicability issue in CaC: https://github.com/ComplianceAsCode/content/issues/13734
+          - openscap-scanner
+          - scap-security-guide
+        state: present
+
+    - name: "Ensure complytime user workspace"
+      ansible.builtin.file:
+        path: "~/complytime"
+        state: directory
+        mode: "0700"
+
+    - name: "Copy Assessment Plan"
+      ansible.builtin.copy:
+        src: "assessment-plan.json"
+        dest: "~/complytime/"
+        mode: "0640"
+
+    #### These 3 tasks can be removed as soon complyctl v0.0.9 is available
+    - name: "Download OSCAL Catalog"
+      ansible.builtin.get_url:
+        url: "{{ fedora_catalog }}"
+        dest: "{{ complytime_workspace }}/controls/{{ catalog_file }}"
+        mode: "0644"
+
+    - name: "Download OSCAL Profile"
+      ansible.builtin.get_url:
+        url: "{{ fedora_profile }}"
+        dest: "{{ complytime_workspace }}/controls/{{ profile_file }}"
+        mode: "0644"
+
+    - name: "Download OSCAL Component Definition"
+      ansible.builtin.get_url:
+        url: "{{ fedora_component_definition }}"
+        dest: "{{ complytime_workspace }}/bundles/{{ component_definition_file }}"
+        mode: "0644"
+
+    - name: "Update profile references in Component Definition"
+      ansible.builtin.replace:
+        path: "{{ complytime_workspace }}/bundles/{{ component_definition_file }}"
+        regexp: "trestle://.*"
+        replace: "trestle://controls/{{ profile_file }}\","
+
+    - name: "Update catalog references in Profile"
+      ansible.builtin.replace:
+        path: "{{ complytime_workspace }}/controls/{{ profile_file }}"
+        regexp: "trestle://.*"
+        replace: "trestle://controls/{{ catalog_file }}\","
+    ####
+
+    - name: "Execute 'generate' command with customized Assessment Plan"
+      ansible.builtin.command:
+        cmd: "complyctl generate"
+        chdir: "~"
+      changed_when: false
+
+    - name: "Execute 'scan' command"
+      ansible.builtin.command:
+        cmd: "complyctl scan --with-md"
+        chdir: "~"
+      changed_when: false
+
+    - name: "Check if there is 'No Findings.' string in assessment-results.md"
+      ansible.builtin.command:
+        cmd: "grep -q 'No Findings.' ~/complytime/assessment-results.md"
+      changed_when: false
+      failed_when: false
+      register: result_grep_findinds
+
+    - name: "Assert: VM is 100% compliant based on complyctl scan"
+      ansible.builtin.assert:
+        that: result_grep_findinds.rc == 0
+        fail_msg: "Provisioned Box is not 100% compliant"
+...
