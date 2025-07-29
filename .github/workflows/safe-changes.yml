@@ -1,4 +1,4 @@
-name: Vagrant VM Validation (Libvirt)
+name: Vagrant VM Validation (VirtualBox)
 
 on:
   push:
@@ -12,39 +12,32 @@ on:
 jobs:
   validate-vm:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Ansible needed for ansible-playbook --syntax-check
+      - name: Install System Dependencies (Ansible, VirtualBox)
         run: |
+          sudo add-apt-repository universe -y
           sudo apt-get update
-          sudo apt-get install -y ansible
+          sudo apt-get install -y ansible virtualbox
 
       - name: Run Ansible Playbook Syntax Check
         run: ansible-playbook vm_hardening.yml validate_vm_complyctl.yml --syntax-check
 
-      # --- Existing Vagrant Setup and Validation Steps ---
-      - name: Install Libvirt and QEMU dependencies
+      # --- Install Vagrant (direct download) ---
+      - name: Install Vagrant
         run: |
-          sudo apt-get update
-          sudo apt-get install -y qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils libvirt-dev zlib1g-dev ruby-dev ebtables dnsmasq-base
-
-          sudo usermod -a -G libvirt "$USER"
-          sudo systemctl enable --now libvirtd.service
-          sudo systemctl status libvirtd.service
-          sudo virsh net-autostart default
-
-      - name: Install Vagrant with libvirt plugin
-        run: |
-          sudo apt-get install -y vagrant vagrant-libvirt
+          wget -O - https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+          sudo apt update && sudo apt install vagrant
+          vagrant --version
 
       - name: Bring up Vagrant VM and Validate
         run: |
-          vagrant up --provider=libvirt --provision --debug
+          sudo vagrant up --provision --provider=virtualbox
 
       - name: Clean up Vagrant VM
         if: always()
         run: |
-          vagrant destroy -f --provider=libvirt
+          sudo vagrant destroy -f

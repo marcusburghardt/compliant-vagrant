@@ -1,14 +1,12 @@
 # This Vagrant file will create a Fedora VM using the libvirt provider.
 Vagrant.configure("2") do |config|
-  config.vm.provider "libvirt" do |libvirt|
+  config.vm.provider "virtualbox" do |libvirt|
     libvirt.memory = "2048"
     libvirt.cpus = 2
-    libvirt.default_prefix = "demo_"
-    libvirt.channel :type => 'unix', :target_name => 'org.qemu.guest_agent.0', :target_type => 'virtio'
   end
 
   config.vm.define "fedora" do |fedora|
-    fedora.vm.box_url  = "https://download.fedoraproject.org/pub/fedora/linux/releases/42/Cloud/x86_64/images/Fedora-Cloud-Base-Vagrant-libvirt-42-1.1.x86_64.vagrant.libvirt.box"
+    fedora.vm.box_url  = "https://download.fedoraproject.org/pub/fedora/linux/releases/42/Cloud/x86_64/images/Fedora-Cloud-Base-Vagrant-VirtualBox-42-1.1.x86_64.vagrant.virtualbox.box"
     fedora.vm.box      = "f42-cloud-base"
     fedora.vm.hostname = "fedora42"
   end
