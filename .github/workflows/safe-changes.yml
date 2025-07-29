@@ -1,0 +1,50 @@
+name: Vagrant VM Validation (Libvirt)
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  validate-vm:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Ansible needed for ansible-playbook --syntax-check
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ansible
+
+      - name: Run Ansible Playbook Syntax Check
+        run: ansible-playbook vm_hardening.yml validate_vm_complyctl.yml --syntax-check
+
+      # --- Existing Vagrant Setup and Validation Steps ---
+      - name: Install Libvirt and QEMU dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils libvirt-dev zlib1g-dev ruby-dev ebtables dnsmasq-base
+
+          sudo usermod -a -G libvirt "$USER"
+          sudo systemctl enable --now libvirtd.service
+          sudo systemctl status libvirtd.service
+          sudo virsh net-autostart default
+
+      - name: Install Vagrant with libvirt plugin
+        run: |
+          sudo apt-get install -y vagrant vagrant-libvirt
+
+      - name: Bring up Vagrant VM and Validate
+        run: |
+          vagrant up --provider=libvirt --provision --debug
+
+      - name: Clean up Vagrant VM
+        if: always()
+        run: |
+          vagrant destroy -f --provider=libvirt
