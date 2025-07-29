@@ -1,0 +1,45 @@
+---
+- name: Validate VM Settings
+  hosts: all
+  become: true
+  check_mode: true
+  vars:
+    var_sudo_logfile: "/var/log/sudo.log"
+    var_accounts_user_umask: "027"
+  tasks:
+    - name: "Test fix for package_firewalld_installed"
+      ansible.builtin.dnf:
+        name:
+          - firewalld
+        state: present
+      register: result_package_firewalld_installed
+
+    - name: "Test fix for sudo_custom_logfile"
+      ansible.builtin.lineinfile:
+        path: /etc/sudoers
+        line: 'Defaults logfile={{ var_sudo_logfile }}'
+        validate: /usr/sbin/visudo -cf %s
+      register: result_sudo_custom_logfile
+
+    - name: "Test fix for accounts_umask_etc_login_defs"
+      ansible.builtin.replace:
+        path: /etc/login.defs
+        regexp: ^(\s*)UMASK(\s+).*
+        replace: '\g<1>UMASK\g<2>{{ var_accounts_user_umask }}'
+      register: result_accounts_umask_etc_login_defs
+
+    - name: Check package_firewalld_installed
+      ansible.builtin.assert:
+        that: result_sudo_custom_logfile is not changed
+        fail_msg: "firewalld package is not installed"
+
+    - name: Check sudo_custom_logfile
+      ansible.builtin.assert:
+        that: result_sudo_custom_logfile is not changed
+        fail_msg: "There is no custom log file defined for Sudo"
+
+    - name: Check accounts_umask_etc_login_defs
+      ansible.builtin.assert:
+        that: result_accounts_umask_etc_login_defs is not changed
+        fail_msg: "The UMASK value defined in /etc/login.defs is not compliant"
+...
