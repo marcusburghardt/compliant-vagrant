@@ -27,7 +27,6 @@ jobs:
 
       - name: Install System Dependencies (Ansible, VirtualBox)
         run: |
-          sudo add-apt-repository universe -y
           sudo apt-get update
           sudo apt-get install -y ansible virtualbox
 
@@ -49,7 +48,7 @@ jobs:
 
       - name: Bring up Vagrant VM and Validate
         run: |
-          vagrant up --provision --provider=virtualbox
+          VAGRANT_DISABLE_VBOXSYMLINKCREATE=1 vagrant up --provision --provider=virtualbox
 
       - name: Clean up Vagrant VM
         if: always()
