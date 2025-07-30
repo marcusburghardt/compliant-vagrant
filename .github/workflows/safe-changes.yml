@@ -16,7 +16,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Cache Vagrant boxes
+      - name: Cache Vagrant boxes to perform better with boxes unrelated changes
         id: cache-boxes
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
@@ -25,15 +25,14 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-vagrant-boxes-
 
-      - name: Install System Dependencies (Ansible, VirtualBox)
+      - name: Install host dependencies (Ansible, VirtualBox)
         run: |
           sudo apt-get update
           sudo apt-get install -y ansible virtualbox
 
-      - name: Run Ansible Playbook Syntax Check
+      - name: Run Ansible Playbook syntax check first
         run: ansible-playbook vm_hardening.yml validate_vm_complyctl.yml --syntax-check
 
-      # --- Install Vagrant (direct download) ---
       - name: Install Vagrant
         run: |
           wget -O - https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
@@ -41,12 +40,12 @@ jobs:
           sudo apt update && sudo apt install vagrant
           vagrant --version
 
-      - name: Add Vagrant box (if not cached)
+      - name: Download and add Vagrant box (if not cached)
         if: steps.cache-boxes.outputs.cache-hit != 'true'
         run: |
           vagrant box add https://download.fedoraproject.org/pub/fedora/linux/releases/42/Cloud/x86_64/images/Fedora-Cloud-Base-Vagrant-VirtualBox-42-1.1.x86_64.vagrant.virtualbox.box --name f42-cloud-base || true
 
-      - name: Bring up Vagrant VM and Validate
+      - name: Bring up Vagrant VM and validate with complyctl
         run: |
           VAGRANT_DISABLE_VBOXSYMLINKCREATE=1 vagrant up --provision --provider=virtualbox
 
