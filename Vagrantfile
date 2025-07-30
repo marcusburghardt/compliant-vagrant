@@ -1,7 +1,7 @@
 # This Vagrant file will create a Fedora VM using the libvirt provider.
 Vagrant.configure("2") do |config|
   config.vm.provider "virtualbox" do |vb|
-    vb.memory = "2048"
+    vb.memory = "4096"
     vb.cpus = 2
   end
 
@@ -22,10 +22,6 @@ Vagrant.configure("2") do |config|
     mkdir -p /etc/ansible
     echo "[defaults]" | sudo tee /etc/ansible/ansible.cfg > /dev/null
     echo "interpreter_python = auto_silent" | sudo tee -a /etc/ansible/ansible.cfg > /dev/null
-
-    # Show VM memory and cpu info
-    free -h
-    cat /proc/cpuinfo | grep cores | tail -n1
   SHELL
 
   # --- PRE-DEPLOYMENT HARDENING PROVISIONER ---

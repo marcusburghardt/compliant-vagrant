@@ -1,6 +1,7 @@
 ---
 - name: Playbook to configure the VM
   hosts: all
+  gather_facts: false
   become: true
   vars:
     # Variables used for fixing the system
@@ -10,11 +11,12 @@
     - name: "Ensure desired packages are installed"
       ansible.builtin.dnf:
         name:
+          - complyctl
+          - complyctl-openscap-plugin
           - firewalld # Fix package_firewalld_installed
-          - openssh-clients
-          - openssh-server
-          - qemu-guest-agent
-          - tree
+          - kernel # Due to an applicability issue in CaC: https://github.com/ComplianceAsCode/content/issues/13734
+          - openscap-scanner
+          - scap-security-guide
         state: present
 
     - name: "Fix sudo_custom_logfile"
