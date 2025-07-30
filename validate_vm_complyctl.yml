@@ -79,4 +79,5 @@
       ansible.builtin.assert:
         that: result_grep_findinds.rc == 0
         fail_msg: "Provisioned Box is not 100% compliant"
+        success_msg: "Good Job!! :)"
 ...
