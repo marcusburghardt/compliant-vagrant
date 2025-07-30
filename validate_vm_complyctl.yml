@@ -12,16 +12,6 @@
     profile_file: "cusp-profile.json"
     component_definition_file: "cusp-component-definition.json"
   tasks:
-    - name: "Ensure the compliance packages are installed"
-      ansible.builtin.dnf:
-        name:
-          - complyctl
-          - complyctl-openscap-plugin
-          - kernel # Due to an applicability issue in CaC: https://github.com/ComplianceAsCode/content/issues/13734
-          - openscap-scanner
-          - scap-security-guide
-        state: present
-
     - name: "Ensure complytime user workspace"
       ansible.builtin.file:
         path: "~/complytime"
