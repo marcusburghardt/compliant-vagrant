@@ -2,6 +2,7 @@
 - name: Scan VM with complyctl
   hosts: all
   become: true
+  gather_facts: false
   vars:
     complytime_workspace: "/usr/share/complytime"
     fedora_catalog: "https://raw.githubusercontent.com/ComplianceAsCode/oscal-content/refs/heads/main/catalogs/cusp_fedora/catalog.json"

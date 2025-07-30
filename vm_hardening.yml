@@ -1,6 +1,7 @@
 ---
 - name: Playbook to configure the VM
   hosts: all
+  gather_facts: false
   become: true
   vars:
     # Variables used for fixing the system
