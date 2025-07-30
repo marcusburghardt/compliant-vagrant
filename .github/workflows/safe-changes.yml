@@ -14,7 +14,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Cache Vagrant boxes
+        id: cache-boxes
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ~/.vagrant.d/boxes
+          key: ${{ runner.os }}-vagrant-boxes-${{ hashFiles('Vagrantfile') }}
+          restore-keys: |
+            ${{ runner.os }}-vagrant-boxes-
 
       - name: Install System Dependencies (Ansible, VirtualBox)
         run: |
@@ -33,11 +42,16 @@ jobs:
           sudo apt update && sudo apt install vagrant
           vagrant --version
 
+      - name: Add Vagrant box (if not cached)
+        if: steps.cache-boxes.outputs.cache-hit != 'true'
+        run: |
+          vagrant box add https://download.fedoraproject.org/pub/fedora/linux/releases/42/Cloud/x86_64/images/Fedora-Cloud-Base-Vagrant-VirtualBox-42-1.1.x86_64.vagrant.virtualbox.box --name f42-cloud-base || true
+
       - name: Bring up Vagrant VM and Validate
         run: |
-          sudo vagrant up --provision --provider=virtualbox
+          vagrant up --provision --provider=virtualbox
 
       - name: Clean up Vagrant VM
         if: always()
         run: |
-          sudo vagrant destroy -f
+          vagrant destroy -f
