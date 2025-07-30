@@ -14,8 +14,6 @@
           - firewalld # Fix package_firewalld_installed
           - openssh-clients
           - openssh-server
-          - qemu-guest-agent
-          - tree
         state: present
 
     - name: "Fix sudo_custom_logfile"
