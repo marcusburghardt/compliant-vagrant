@@ -21,7 +21,7 @@ Currently the CUSP profile includes multiple security recommendations that could
 
 However, we use a very specific environment and naturally not all requirements from CUSP are relevant. For that reason, a customized Assessment Plan with a minimal coverage (only 3 rules for the purposes of this demo) will be used.
 
-Once this Assessment Plan is created in collaboration between Compliance and Fedora experts (see [demo_complyctl_fedora.yml](https://github.com/marcusburghardt/complytime-demos/blob/main/base_ansible_env/demo_complyctl_fedora.yml)), we want to use it to check if our provisioned VMs are 100% compliant with the desired state.
+Once this Assessment Plan is created in collaboration between Compliance and Fedora experts (see [demo_complyctl_fedora.yml](https://github.com/complytime/complytime-demos/blob/main/base_ansible_env/demo_complyctl_fedora.yml)), we want to use it to check if our provisioned VMs are 100% compliant with the desired state.
 
 There are many moving pieces involving compliance even in a relatively simple environment like this, and manual assessment may be overwhelming.
 Thanks to hosting all the content in Git we can much easily adopt GitOps approach to make our lives easier.
