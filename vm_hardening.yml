@@ -6,7 +6,7 @@
   vars:
     # Variables used for fixing the system
     var_sudo_logfile: "/var/log/sudo.log"
-    var_accounts_user_umask: "027"
+    var_accounts_user_umask: "025"
   tasks:
     - name: "Ensure desired packages are installed"
       ansible.builtin.dnf:
