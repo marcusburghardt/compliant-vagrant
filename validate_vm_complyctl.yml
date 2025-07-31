@@ -3,14 +3,6 @@
   hosts: all
   become: true
   gather_facts: false
-  vars:
-    complytime_workspace: "/usr/share/complytime"
-    fedora_catalog: "https://raw.githubusercontent.com/ComplianceAsCode/oscal-content/refs/heads/main/catalogs/cusp_fedora/catalog.json"
-    fedora_profile: "https://raw.githubusercontent.com/ComplianceAsCode/oscal-content/refs/heads/main/profiles/fedora-cusp_fedora-default/profile.json"
-    fedora_component_definition: "https://raw.githubusercontent.com/ComplianceAsCode/oscal-content/refs/heads/main/component-definitions/fedora/fedora-cusp_fedora-default/component-definition.json"
-    catalog_file: "cusp-catalog.json"
-    profile_file: "cusp-profile.json"
-    component_definition_file: "cusp-component-definition.json"
   tasks:
     - name: "Ensure complytime user workspace"
       ansible.builtin.file:
@@ -23,38 +15,6 @@
         src: "assessment-plan.json"
         dest: "~/complytime/"
         mode: "0640"
-
-    #### These 5 tasks can be removed as soon complyctl v0.0.9 is available
-    - name: "Download OSCAL Catalog"
-      ansible.builtin.get_url:
-        url: "{{ fedora_catalog }}"
-        dest: "{{ complytime_workspace }}/controls/{{ catalog_file }}"
-        mode: "0644"
-
-    - name: "Download OSCAL Profile"
-      ansible.builtin.get_url:
-        url: "{{ fedora_profile }}"
-        dest: "{{ complytime_workspace }}/controls/{{ profile_file }}"
-        mode: "0644"
-
-    - name: "Download OSCAL Component Definition"
-      ansible.builtin.get_url:
-        url: "{{ fedora_component_definition }}"
-        dest: "{{ complytime_workspace }}/bundles/{{ component_definition_file }}"
-        mode: "0644"
-
-    - name: "Update profile references in Component Definition"
-      ansible.builtin.replace:
-        path: "{{ complytime_workspace }}/bundles/{{ component_definition_file }}"
-        regexp: "trestle://.*"
-        replace: "trestle://controls/{{ profile_file }}\","
-
-    - name: "Update catalog references in Profile"
-      ansible.builtin.replace:
-        path: "{{ complytime_workspace }}/controls/{{ profile_file }}"
-        regexp: "trestle://.*"
-        replace: "trestle://controls/{{ catalog_file }}\","
-    ####
 
     - name: "Execute 'generate' command with customized Assessment Plan"
       ansible.builtin.command:
